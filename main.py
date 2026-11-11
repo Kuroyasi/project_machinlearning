@@ -178,97 +178,177 @@ Y = df[target]
 
 
 
+
 # ==========================================
-# 5. 학습용 데이터와 테스트용 데이터 분리
+# 5. 데이터 비율 설정 및 사용자 정보 입력
 # ==========================================
 
-# 기본 테스트 데이터 비율
-if "test_size_percent" not in st.session_state:
-    st.session_state.test_size_percent = 30.0
+st.divider()
+
+left_col, right_col = st.columns(2, gap="large")
 
 
-# 입력 오류 팝업
-@st.dialog("입력 오류")
-def show_input_error():
-    st.warning("0~100사이의 수를 입력해주세요.")
+# ==========================================
+# 왼쪽 : 데이터 분할 비율 설정
+# ==========================================
 
+with left_col:
 
-@st.dialog("비율 설정 오류")
-def show_split_error():
-    st.warning(
-        "0% 또는 100%는 학습용과 테스트용 데이터를 "
-        "모두 만들 수 없습니다. 0보다 크고 100보다 작은 수를 입력해주세요."
-    )
+    st.subheader("테스트 데이터 비율 (%)")
 
+    if "test_size_percent" not in st.session_state:
+        st.session_state.test_size_percent = 30.0
 
-st.subheader("학습용 데이터와 테스트용 데이터 분리")
+    with st.form("test_size_form"):
 
-with st.form("test_size_form"):
+        test_size_input = st.text_area(
+            "테스트 데이터 비율",
+            value=str(st.session_state.test_size_percent),
+            height=80,
+            label_visibility="collapsed"
+        )
 
-    test_size_input = st.text_area(
-        "테스트 데이터 비율 (%)",
-        value=str(st.session_state.test_size_percent),
-        height=70,
-        help="0부터 100까지의 숫자를 입력하세요."
-    )
+        apply_test_size = st.form_submit_button(
+            "분할 비율 적용",
+            use_container_width=True
+        )
 
-    apply_test_size = st.form_submit_button(
-        "분할 비율 적용",
-        use_container_width=True
-    )
+    @st.dialog("입력 오류")
+    def show_input_error():
+        st.warning("0~100사이의 수를 입력해주세요.")
 
+    @st.dialog("비율 설정 오류")
+    def show_split_error():
+        st.warning(
+            "학습과 테스트를 위해 0보다 크고 "
+            "100보다 작은 수를 입력해주세요."
+        )
 
-# 적용 버튼을 눌렀을 때 입력값 검사
-if apply_test_size:
+    if apply_test_size:
 
-    try:
-        percent = float(test_size_input.strip())
+        try:
+            percent = float(test_size_input.strip())
 
-        if not 0 <= percent <= 100:
+            if not 0 <= percent <= 100:
+                show_input_error()
+                st.stop()
+
+            elif percent == 0 or percent == 100:
+                show_split_error()
+                st.stop()
+
+            else:
+                st.session_state.test_size_percent = percent
+
+        except ValueError:
             show_input_error()
             st.stop()
 
-        elif percent == 0 or percent == 100:
-            show_split_error()
-            st.stop()
+    test_size = st.session_state.test_size_percent / 100
 
-        else:
-            st.session_state.test_size_percent = percent
+    st.write("현재 데이터 분할 비율")
 
-    except ValueError:
-        show_input_error()
-        st.stop()
+    metric1, metric2 = st.columns(2)
 
-
-# 백분율을 소수로 변환
-test_size = st.session_state.test_size_percent / 100
-
-
-# 현재 설정된 비율 표시
-col1, col2 = st.columns(2)
-
-with col1:
-    st.metric(
-        "학습 데이터 비율",
+    metric1.metric(
+        "학습 데이터",
         f"{100 - st.session_state.test_size_percent:.1f}%"
     )
 
-with col2:
-    st.metric(
-        "테스트 데이터 비율",
+    metric2.metric(
+        "테스트 데이터",
         f"{st.session_state.test_size_percent:.1f}%"
     )
 
 
-# 학습용 데이터와 테스트용 데이터 분리
+# ==========================================
+# 오른쪽 : 사용자 정보 입력
+# ==========================================
+
+with right_col:
+
+    st.subheader("사용자 정보 입력")
+
+    education_options = {
+        "고등학교 졸업": 1,
+        "대학교 일부 수료": 2,
+        "학사": 3,
+        "석사": 4,
+        "박사": 5,
+        "전문 자격증": 6
+    }
+
+    with st.form("prediction_form"):
+
+        n_age = st.number_input(
+            "나이",
+            min_value=1,
+            max_value=120,
+            value=20,
+            step=1
+        )
+
+        selected_education = st.selectbox(
+            "최종 학력",
+            list(education_options.keys())
+        )
+
+        n_online_class = st.number_input(
+            "지금까지 수강한 온라인 강의 수",
+            min_value=0,
+            max_value=50,
+            value=10,
+            step=1
+        )
+
+        min_study = max(
+            0.0,
+            float(df["study_times"].min())
+        )
+
+        max_study = max(
+            min_study + 1.0,
+            float(df["study_times"].max())
+        )
+
+        default_study = float(np.clip(
+            df["study_times"].median(),
+            min_study,
+            max_study
+        ))
+
+        n_studytime = st.number_input(
+            "총 공부 시간",
+            min_value=min_study,
+            max_value=max_study,
+            value=default_study,
+            step=1.0
+        )
+
+        submit = st.form_submit_button(
+            "디지털 문해력 점수 예측",
+            use_container_width=True
+        )
+
+    if submit:
+        st.session_state.prediction_input = {
+            "age": n_age,
+            "edu_level": education_options[selected_education],
+            "online_class": n_online_class,
+            "study_times": n_studytime
+        }
+
+
+# ==========================================
+# 6. 학습용 데이터와 테스트용 데이터 분리
+# ==========================================
+
 X_train, X_test, Y_train, Y_test = train_test_split(
     X,
     Y,
     test_size=test_size,
     random_state=1
 )
-
-
 
 # ==========================================
 # 6. Random Forest Regressor 모델 생성
@@ -334,95 +414,22 @@ with st.expander("데이터셋 미리보기"):
 st.divider()
 
 
+
 # ==========================================
-# 9. 디지털 문해력 점수 예측
+# 사용자 입력을 통한 디지털 문해력 예측
 # ==========================================
 
-st.header("디지털 문해력 예측")
+if "prediction_input" in st.session_state:
 
-st.write(
-    "아래 항목에 정보를 입력하면 "
-    "Random Forest Regressor 모델이 "
-    "예상 디지털 문해력 점수를 계산합니다."
-)
-
-education_options = {
-    "고등학교 졸업": 1,
-    "대학교 일부 수료": 2,
-    "학사": 3,
-    "석사": 4,
-    "박사": 5,
-    "전문 자격증": 6
-}
-
-with st.form("prediction_form"):
-
-    st.subheader("사용자 정보 입력")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        n_age = st.number_input(
-            "나이",
-            min_value=1,
-            max_value=120,
-            value=20,
-            step=1
-        )
-
-        selected_education = st.selectbox(
-            "최종 학력",
-            list(education_options.keys())
-        )
-
-    with col2:
-
-        n_online_class = st.number_input(
-            "지금까지 수강한 온라인 강의 수",
-            min_value=0,
-            max_value=50,
-            value=10,
-            step=1
-        )
-
-        min_study = max(0.0, float(df["study_times"].min()))
-        max_study = max(min_study + 1.0, float(df["study_times"].max()))
-
-        default_study = float(np.clip(
-            df["study_times"].median(),
-            min_study,
-            max_study
-        ))
-
-        n_studytime = st.number_input(
-            "총 공부 시간",
-            min_value=min_study,
-            max_value=max_study,
-            value=default_study,
-            step=1.0
-        )
-
-    submit = st.form_submit_button(
-        "디지털 문해력 점수 예측",
-        use_container_width=True
-    )
-
-
-if submit:
-
-    new_data = pd.DataFrame([{
-        "age": n_age,
-        "edu_level": education_options[selected_education],
-        "online_class": n_online_class,
-        "study_times": n_studytime
-    }])
+    new_data = pd.DataFrame([
+        st.session_state.prediction_input
+    ])
 
     prediction = model.predict(new_data)[0]
 
     st.divider()
 
-    st.subheader("예측 결과")
+    st.subheader("디지털 문해력 예측 결과")
 
     st.metric(
         "예상 디지털 문해력 점수",
@@ -434,13 +441,8 @@ if submit:
     )
 
     st.caption(
-        "예측 점수는 학습 데이터의 패턴을 기반으로 계산된 추정값이며, "
-        "실제 디지털 문해력 검사 결과와 다를 수 있습니다."
+        "예측 결과는 학습 데이터의 패턴을 기반으로 한 추정값입니다."
     )
-
-
-st.divider()
-
 
 # ==========================================
 # 10. 머신러닝 모델 성능 평가
