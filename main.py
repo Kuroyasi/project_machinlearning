@@ -31,8 +31,9 @@ st.divider()
 
 
 
+
 # ==========================================
-# 한글 폰트 설정
+# 한글 폰트 설정 (Streamlit Cloud)
 # ==========================================
 
 import matplotlib.pyplot as plt
@@ -42,39 +43,33 @@ from pathlib import Path
 
 def set_korean_font():
 
-    # 운영체제별 한글 폰트 경로
-    font_candidates = [
-        "C:/Windows/Fonts/malgun.ttf",  # Windows
-        "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",  # Linux
-        "/System/Library/Fonts/AppleSDGothicNeo.ttc"  # Mac
-    ]
+    font_path = Path(
+        "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
+    )
 
-    font_path = None
-
-    for path in font_candidates:
-        if Path(path).exists():
-            font_path = path
-            break
-
-    if font_path is None:
-        raise FileNotFoundError(
-            "한글 폰트를 찾을 수 없습니다. "
-            "NanumGothic 또는 Malgun Gothic을 설치해주세요."
+    if not font_path.exists():
+        # 다른 설치 경로에서도 검색
+        candidates = list(
+            Path("/usr/share/fonts").rglob("NanumGothic.ttf")
         )
 
-    # 폰트 등록
-    fm.fontManager.addfont(font_path)
+        if candidates:
+            font_path = candidates[0]
+        else:
+            raise FileNotFoundError(
+                "나눔고딕 폰트가 설치되지 않았습니다. "
+                "packages.txt를 확인해주세요."
+            )
 
-    # 폰트 이름 가져오기
+    fm.fontManager.addfont(str(font_path))
+
     font_name = fm.FontProperties(
-        fname=font_path
+        fname=str(font_path)
     ).get_name()
 
-    # Matplotlib 전체 그래프에 적용
     plt.rcParams["font.family"] = font_name
     plt.rcParams["axes.unicode_minus"] = False
 
-    # Seaborn 그래프에도 적용
     sns.set_theme(
         style="whitegrid",
         rc={
