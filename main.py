@@ -82,48 +82,59 @@ def set_korean_font():
 FONT_NAME = set_korean_font()
 
 
+
 # ==================================================
-# 3. 그래프 디자인 설정
+# 그래프 디자인 설정
 # ==================================================
 
-GRAPH_BLUE = "#4C78A8"
-GRAPH_ORANGE = "#F28E2B"
-GRAPH_TEAL = "#59A5A5"
-GRAPH_GRAY = "#A0A0A0"
+# 그래프별 색상 팔레트
+GRAPH_COLORS = [
+    "#5B8FF9",  # 파랑
+    "#61DDAA",  # 민트
+    "#65789B",  # 청회색
+    "#F6BD16",  # 노랑
+    "#7262FD",  # 보라
+    "#78D3F8",  # 하늘색
+    "#9661BC",  # 자주색
+    "#F6903D"   # 주황
+]
 
-graph_rc = {
-    "font.size": 9,
-    "axes.titlesize": 11,
-    "axes.labelsize": 9,
-    "xtick.labelsize": 8,
-    "ytick.labelsize": 8,
-    "legend.fontsize": 8,
-    "axes.unicode_minus": False,
-    "axes.spines.top": False,
-    "axes.spines.right": False,
-    "axes.grid": True,
-    "grid.alpha": 0.2,
-    "grid.linestyle": "--",
-    "axes.axisbelow": True,
-    "figure.facecolor": "white",
-    "axes.facecolor": "white"
-}
-
-if FONT_NAME:
-    graph_rc["font.family"] = FONT_NAME
-
-plt.rcParams.update(graph_rc)
+GRAPH_BLUE = "#5B8FF9"
+GRAPH_ORANGE = "#F6903D"
+GRAPH_GRAY = "#9AA6B2"
 
 sns.set_theme(
     style="whitegrid",
-    palette=[
-        GRAPH_BLUE,
-        GRAPH_ORANGE,
-        GRAPH_TEAL
-    ],
-    rc=graph_rc
+    rc={
+        "font.family": FONT_NAME if FONT_NAME else "sans-serif",
+        "font.size": 8,
+        "axes.titlesize": 10,
+        "axes.labelsize": 8,
+        "xtick.labelsize": 7,
+        "ytick.labelsize": 7,
+        "legend.fontsize": 7,
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "axes.grid": True,
+        "grid.alpha": 0.15,
+        "grid.linestyle": "--",
+        "axes.axisbelow": True,
+        "figure.facecolor": "white",
+        "axes.facecolor": "white",
+        "axes.unicode_minus": False
+    }
 )
 
+plt.rcParams.update({
+    "font.family": FONT_NAME if FONT_NAME else "sans-serif",
+    "font.size": 8,
+    "axes.titlesize": 10,
+    "axes.labelsize": 8,
+    "xtick.labelsize": 7,
+    "ytick.labelsize": 7,
+    "legend.fontsize": 7,
+    "axes.unicode_minus": False
+})
 
 # ==================================================
 # 4. 데이터셋 불러오기
