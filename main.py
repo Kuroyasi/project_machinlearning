@@ -30,29 +30,63 @@ st.caption("Random Forest Regressor 기반 디지털 문해력 예측 시스템"
 st.divider()
 
 
+
 # ==========================================
-# 2. 한글 폰트 설정
+# 한글 폰트 설정
 # ==========================================
+
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+import seaborn as sns
+from pathlib import Path
 
 def set_korean_font():
 
+    # 운영체제별 한글 폰트 경로
     font_candidates = [
-        "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",
-        "C:/Windows/Fonts/malgun.ttf",
-        "/System/Library/Fonts/AppleSDGothicNeo.ttc"
+        "C:/Windows/Fonts/malgun.ttf",  # Windows
+        "/usr/share/fonts/truetype/nanum/NanumGothic.ttf",  # Linux
+        "/System/Library/Fonts/AppleSDGothicNeo.ttc"  # Mac
     ]
+
+    font_path = None
 
     for path in font_candidates:
         if Path(path).exists():
-            fm.fontManager.addfont(path)
-            font_name = fm.FontProperties(fname=path).get_name()
-            plt.rcParams["font.family"] = font_name
+            font_path = path
             break
 
+    if font_path is None:
+        raise FileNotFoundError(
+            "한글 폰트를 찾을 수 없습니다. "
+            "NanumGothic 또는 Malgun Gothic을 설치해주세요."
+        )
+
+    # 폰트 등록
+    fm.fontManager.addfont(font_path)
+
+    # 폰트 이름 가져오기
+    font_name = fm.FontProperties(
+        fname=font_path
+    ).get_name()
+
+    # Matplotlib 전체 그래프에 적용
+    plt.rcParams["font.family"] = font_name
     plt.rcParams["axes.unicode_minus"] = False
 
+    # Seaborn 그래프에도 적용
+    sns.set_theme(
+        style="whitegrid",
+        rc={
+            "font.family": font_name,
+            "axes.unicode_minus": False
+        }
+    )
 
-set_korean_font()
+    return font_name
+
+
+FONT_NAME = set_korean_font()
 
 
 # ==========================================
