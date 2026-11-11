@@ -177,16 +177,97 @@ X = df[features]
 Y = df[target]
 
 
+
 # ==========================================
 # 5. 학습용 데이터와 테스트용 데이터 분리
 # ==========================================
 
+# 기본 테스트 데이터 비율
+if "test_size_percent" not in st.session_state:
+    st.session_state.test_size_percent = 30.0
+
+
+# 입력 오류 팝업
+@st.dialog("입력 오류")
+def show_input_error():
+    st.warning("0~100사이의 수를 입력해주세요.")
+
+
+@st.dialog("비율 설정 오류")
+def show_split_error():
+    st.warning(
+        "0% 또는 100%는 학습용과 테스트용 데이터를 "
+        "모두 만들 수 없습니다. 0보다 크고 100보다 작은 수를 입력해주세요."
+    )
+
+
+st.subheader("학습용 데이터와 테스트용 데이터 분리")
+
+with st.form("test_size_form"):
+
+    test_size_input = st.text_area(
+        "테스트 데이터 비율 (%)",
+        value=str(st.session_state.test_size_percent),
+        height=70,
+        help="0부터 100까지의 숫자를 입력하세요."
+    )
+
+    apply_test_size = st.form_submit_button(
+        "분할 비율 적용",
+        use_container_width=True
+    )
+
+
+# 적용 버튼을 눌렀을 때 입력값 검사
+if apply_test_size:
+
+    try:
+        percent = float(test_size_input.strip())
+
+        if not 0 <= percent <= 100:
+            show_input_error()
+            st.stop()
+
+        elif percent == 0 or percent == 100:
+            show_split_error()
+            st.stop()
+
+        else:
+            st.session_state.test_size_percent = percent
+
+    except ValueError:
+        show_input_error()
+        st.stop()
+
+
+# 백분율을 소수로 변환
+test_size = st.session_state.test_size_percent / 100
+
+
+# 현재 설정된 비율 표시
+col1, col2 = st.columns(2)
+
+with col1:
+    st.metric(
+        "학습 데이터 비율",
+        f"{100 - st.session_state.test_size_percent:.1f}%"
+    )
+
+with col2:
+    st.metric(
+        "테스트 데이터 비율",
+        f"{st.session_state.test_size_percent:.1f}%"
+    )
+
+
+# 학습용 데이터와 테스트용 데이터 분리
 X_train, X_test, Y_train, Y_test = train_test_split(
     X,
     Y,
-    test_size=0.3,
+    test_size=test_size,
     random_state=1
 )
+
 
 
 # ==========================================
